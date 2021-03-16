@@ -19,10 +19,23 @@ func contact(w http.ResponseWriter, r *http.Request) {
 		"support@lenslocked.com</a>.")
 }
 
+func faq(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, "<h1>Frequently Asked Questions</h1>")
+}
+
+func notf(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, "<h1>Page Not Found")
+}
+
 func main() {
+	var nf http.Handler = http.HandlerFunc(notf)
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
+	r.HandleFunc("/faq", faq)
+	r.NotFoundHandler = nf
 	port := getPort()
 	http.ListenAndServe(port, r)
 }
