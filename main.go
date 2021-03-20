@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"html/template"
 	"lenslocked/views"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 var homeView *views.View
 var contactView *views.View
 var faqView *views.View
+var notTemplate *template.Template
 
 func home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
@@ -32,6 +34,7 @@ func contact(w http.ResponseWriter, r *http.Request) {
 
 func faq(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, "<h1>Frequently Asked Questions</h1>")
 	err := faqView.Template.ExecuteTemplate(w,
 		faqView.Layout, nil)
 	if err != nil {
@@ -41,13 +44,16 @@ func faq(w http.ResponseWriter, r *http.Request) {
 
 func notf(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, "<h1>Page Not Found")
+	if err := notTemplate.Execute(w, nil); err != nil {
+		panic(err)
+	}
 }
 
 func main() {
 	homeView = views.NewView("bootstrap", "views/home.gohtml")
 	contactView = views.NewView("bootstrap", "views/contact.gohtml")
 	faqView = views.NewView("bootstrap", "views/faq.gohtml")
+	notTemplate, _ = template.ParseFiles("views/404.gohtml")
 
 	var nf http.Handler = http.HandlerFunc(notf)
 	r := mux.NewRouter()
