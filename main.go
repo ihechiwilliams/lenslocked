@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"html/template"
+	"lenslocked/controllers"
 	"lenslocked/views"
 	"net/http"
 	"os"
@@ -12,8 +13,6 @@ var (
 	homeView *views.View
 	contactView *views.View
 	faqView *views.View
-	signupView *views.View
-
 )
 
 var notTemplate *template.Template
@@ -40,11 +39,6 @@ func faq(w http.ResponseWriter, r *http.Request) {
 	must(faqView.Render(w, nil))
 }
 
-func signup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	must(signupView.Render(w, nil))
-}
-
 func notf(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	if err := notTemplate.Execute(w, nil); err != nil {
@@ -56,15 +50,16 @@ func main() {
 	homeView = views.NewView("bootstrap", "views/home.gohtml")
 	contactView = views.NewView("bootstrap", "views/contact.gohtml")
 	faqView = views.NewView("bootstrap", "views/faq.gohtml")
-	signupView = views.NewView("bootstrap", "views/signup.gohtml")
+	usersC := controllers.NewUsers()
 	notTemplate, _ = template.ParseFiles("views/404.gohtml")
 
 	var nf http.Handler = http.HandlerFunc(notf)
 	r := mux.NewRouter()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/contact", contact)
-	r.HandleFunc("/faq", faq)
-	r.HandleFunc("/signup", signup)
+	r.HandleFunc("/", home).Methods("GET")
+	r.HandleFunc("/contact", contact).Methods("GET")
+	r.HandleFunc("/faq", faq).Methods("GET")
+	r.HandleFunc("/signup", usersC.New).Methods("GET")
+	r.HandleFunc("/signup", usersC.Create).Methods("POST")
 	r.NotFoundHandler = nf
 	port := getPort()
 	http.ListenAndServe(port, r)
