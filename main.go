@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
 	"lenslocked/views"
@@ -38,7 +37,6 @@ func contact(w http.ResponseWriter, r *http.Request) {
 
 func faq(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprint(w, "<h1>Frequently Asked Questions</h1>")
 	must(faqView.Render(w, nil))
 }
 
