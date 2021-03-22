@@ -15,7 +15,6 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = ""
 	dbname   = "lenslocked_dev"
 )
 
@@ -30,14 +29,16 @@ func main() {
 	// Create a DB connection string and then use it to
 	// create our model services.
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		"dbname=%s sslmode=disable",
+		host, port, user, dbname)
 	us, err := models.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
 	defer us.Close()
+	// us.DestructiveReset()
 	us.AutoMigrate()
+
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(us)
 	notTemplate, _ = template.ParseFiles("views/404.gohtml")
@@ -49,6 +50,8 @@ func main() {
 	r.Handle("/faq", staticC.Faq).Methods("GET")
 	r.HandleFunc("/signup", usersC.New).Methods("GET")
 	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+	r.Handle("/login", usersC.LoginView).Methods("GET")
+	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.NotFoundHandler = nf
 	port := getPort()
 	http.ListenAndServe(port, r)
