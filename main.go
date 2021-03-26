@@ -2,20 +2,22 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"html/template"
 	"lenslocked/controllers"
 	"lenslocked/models"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 )
 
 var notTemplate *template.Template
+
 const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	dbname   = "lenslocked_dev"
+	host   = "localhost"
+	port   = 5432
+	user   = "postgres"
+	dbname = "lenslocked_dev"
 )
 
 func notf(w http.ResponseWriter, r *http.Request) {
