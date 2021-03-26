@@ -137,10 +137,8 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 		return nil, err
 	}
 	db.LogMode(true)
-	hmac := hash.NewHMAC(hmacSecretKey)
 	return &userGorm{
-		db:   db,
-		hmac: hmac,
+		db: db,
 	}, nil
 }
 
@@ -149,8 +147,7 @@ var _ UserDB = &userGorm{}
 // userGorm represents our database interaction layer
 // and implements the UserDB interface fully.
 type userGorm struct {
-	db   *gorm.DB
-	hmac hash.HMAC
+	db *gorm.DB
 }
 
 // ByID will look up a user with the provided ID.
@@ -200,7 +197,7 @@ func (ug *userGorm) ByRemember(rememberHash string) (*User, error) {
 
 // Create will create the provided user and backfill data
 // like the ID, CreatedAt, and UpdatedAt fields.
-func (ug *userGorm) Create(user *User) error {
+func (uv *userValidator) Create(user *User) error {
 	pwBytes := []byte(user.Password + userPwPepper)
 	hashedBytes, err := bcrypt.GenerateFromPassword(
 		pwBytes, bcrypt.DefaultCost)
@@ -216,25 +213,37 @@ func (ug *userGorm) Create(user *User) error {
 		}
 		user.Remember = token
 	}
-	user.RememberHash = ug.hmac.Hash(user.Remember)
+	user.RememberHash = uv.hmac.Hash(user.Remember)
 
+	return uv.UserDB.Create(user)
+}
+
+func (ug *userGorm) Create(user *User) error {
 	return ug.db.Create(user).Error
 }
 
 // Update will update the provided user with all of the data
 // in the provided user object.
-func (ug *userGorm) Update(user *User) error {
+func (uv *userValidator) Update(user *User) error {
 	if user.Remember != "" {
-		user.RememberHash = ug.hmac.Hash(user.Remember)
+		user.RememberHash = uv.hmac.Hash(user.Remember)
 	}
+	return uv.UserDB.Update(user)
+}
+
+func (ug *userGorm) Update(user *User) error {
 	return ug.db.Save(user).Error
 }
 
 // Delete will delete the user with the provided ID
-func (ug *userGorm) Delete(id uint) error {
+func (uv *userValidator) Delete(id uint) error {
 	if id == 0 {
 		return ErrInvalidID
 	}
+	return uv.UserDB.Delete(id)
+}
+
+func (ug *userGorm) Delete(id uint) error {
 	user := User{Model: gorm.Model{ID: id}}
 	return ug.db.Delete(&user).Error
 }
